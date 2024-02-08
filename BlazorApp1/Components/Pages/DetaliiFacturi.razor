@@ -1,0 +1,148 @@
+﻿@page "/DetaliiFacturi"
+@inject IFacturaRepository facturaRepository
+@inject IDetaliiFacturaRepository detaliiFacturaRepository
+
+<MudGrid Class="pa-8">
+    <MudItem>
+        <MudPaper Class="pa-4 mud-width-full">
+            <MudForm @ref="form" @bind-Errors="@errors">
+                <MudGrid>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField @bind-Value=factura.IdFactura T ="int" Label="Id Factura" Required="true" Disabled=true />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField @bind-Value=factura.IdLocatie T="int" Label="Id Locatie" Required="true" Disabled=true />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField @bind-Value=detalii.IdDetaliiFactura T="int" Label="Id Detalii" Required="true" Disabled=true />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField @bind-Value=factura.NumarFactura T ="string" Label="Nr.Factura" Required="true" RequiredError="Numarul de factura este obligatoriu" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudDatePicker Date=Date T="DateTime" Label="DataFactura" Required="true" RequiredError="Data este obligatorie" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField @bind-Value=factura.NumeClient T ="string" Label="Client" Required="true" RequiredError="Numele clientului este obligatoriu" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField @bind-Value=detalii.NumeProdus T ="string" Label="Produs" Required="true" RequiredError="Numele produsului este obligatoriu" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField @bind-Value=detalii.Cantitate T ="decimal" Label="Cantitate" Required="true" RequiredError="Cantitatea este obligatorie" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField @bind-Value=detalii.PretUnitar T ="decimal" Label="Pret Unitar" Required="true" RequiredError="Pretul unitar este obligatorie" />
+                    </MudItem>
+                    <MudItem xs="12" sm="6" md="3">
+                        <MudTextField Value=valoare T="decimal" Label="Valoare" Required="true" Disabled=true />
+                    </MudItem>
+                    <MudItem>
+                        <MudButton EndIcon="@Icons.Material.Filled.Upload" Variant="Variant.Filled" Color="Color.Success" OnClick="Upload">Incarca</MudButton>
+                    </MudItem>
+                    <MudItem>
+                        <MudButton EndIcon="@Icons.Material.Filled.Edit" Variant="Variant.Filled" Color="Color.Primary" OnClick="Edit">Editeaza</MudButton>
+                    </MudItem>
+                </MudGrid>
+            </MudForm>
+        </MudPaper>
+    </MudItem>
+</MudGrid>
+
+<MudItem Class="ma-8">
+    <MudDataGrid T="Factura" ReadOnly="true" Items="@facturi" RowClick="OnRowClick">
+        <Columns>
+            <PropertyColumn Property="x => x.IdFactura" Title="Id Factura" />
+            <PropertyColumn Property="x => x.IdLocatie" Title="Id Locatie" />
+            <PropertyColumn Property="x => x.NumarFactura" Title="Nr. Factura" />
+            <PropertyColumn Property="x => x.NumeClient" Title="Client" />
+            <PropertyColumn Property="x => x.DataFactura" Title="Data Factura" />           
+        </Columns>
+    </MudDataGrid>
+</MudItem>
+
+
+@code {
+    MudForm form;
+    Factura factura = new();
+    DetaliiFactura detalii = new();
+    string[] errors = { };
+    public DateTime Date{ get => DateTime.Now; }
+    public decimal valoare { get=> detalii.Cantitate*detalii.PretUnitar; }
+
+    private IEnumerable<Factura> facturi = new List<Factura>();
+    private IEnumerable<DetaliiFactura> detaliiFacturi = new List<DetaliiFactura>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        facturi = await facturaRepository.All();
+        detaliiFacturi = await detaliiFacturaRepository.All();
+    }
+
+    private async void Upload()
+    {
+        await form.Validate();
+        if (!form.IsValid)
+            return;
+
+        factura.DataFactura = Date;
+
+        if (factura.IdFactura != 0)
+        {
+            var copyFact = new Factura
+            {
+                NumarFactura = factura.NumarFactura,
+                NumeClient = factura.NumeClient,
+                DataFactura = Date
+            };
+            await facturaRepository.Create(copyFact);
+
+            var copyDetalii = new DetaliiFactura
+                {
+                    IdFactura = copyFact.IdFactura,
+                    IdLocatie = copyFact.IdLocatie,
+                    NumeProdus= detalii.NumeProdus,
+                    Cantitate = detalii.Cantitate,
+                    PretUnitar = detalii.PretUnitar,
+                    Valoare = valoare
+                };
+            await detaliiFacturaRepository.Create(copyDetalii);
+        }
+        else
+        {
+            await facturaRepository.Create(factura);
+
+            detalii.IdFactura = factura.IdFactura;
+            detalii.IdLocatie = factura.IdLocatie;
+            detalii.Valoare = valoare;
+            await detaliiFacturaRepository.Create(detalii);
+        }
+
+        factura = new();
+        detalii = new();
+    }
+
+    private async void Edit()
+    {
+        await form.Validate();
+        if (!form.IsValid)
+            return;
+
+        factura.DataFactura = Date;
+        await facturaRepository.Update(factura);
+        detalii.IdFactura = factura.IdFactura;
+        detalii.IdLocatie = factura.IdLocatie;
+        detalii.Valoare = valoare;
+        await detaliiFacturaRepository.Update(detalii);
+
+        factura = new();
+        detalii = new();
+
+    }
+
+    void OnRowClick(DataGridRowClickEventArgs<Factura> args)
+    {
+        factura = args.Item;
+        detalii = detaliiFacturi.Where(d=>d.IdFactura==args.Item.IdFactura).FirstOrDefault();
+    }
+}

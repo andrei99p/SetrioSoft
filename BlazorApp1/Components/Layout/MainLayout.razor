@@ -1,0 +1,27 @@
+﻿@using BlazorApp1.Components.CustomComponents
+@inherits LayoutComponentBase
+
+<MudThemeProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+
+<MudAppBar Class="white" Style="z-index:3;">
+    <MudText Color="Color.Dark" Typo="Typo.h6" Style="margin:0; padding:0; font-family: 'Lucida Handwriting'"><b>Setrio - Andrei Popescu</b></MudText>
+    <MudSpacer />
+    <CustomButton Text="Facturi" Path="/" />
+    <CustomButton Text="Detalii" Path="/DetaliiFacturi" />
+</MudAppBar>
+
+<MudLayout Style="z-index=0;">
+    <MudMainContent>
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+
+<div id="blazor-error-ui">
+    An unhandled error has occurred.
+    <a href="" class="reload">Reload</a>
+    <a class="dismiss">🗙</a>
+</div>

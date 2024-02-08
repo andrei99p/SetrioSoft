@@ -1,0 +1,35 @@
+﻿@inject NavigationManager nav
+
+<MudButton OnClick="GoTo">
+    <MudText Typo="Typo.h6" Style="font-family: 'Times New Roman', Times, serif" @attributes="@textAttributes" @onmouseover="ButtonUnderline" @onmouseout="ButtonUnderline">
+        @Text
+    </MudText>
+</MudButton>
+
+@code {
+    [Parameter]
+    public string Text { get; set; }
+    [Parameter]
+    public string Path { get; set; }
+
+    bool isUnderlined = false;
+    private void ButtonUnderline()
+    {
+        isUnderlined = !isUnderlined;
+    }
+
+    private Dictionary<string, object> textAttributes => new()
+    {
+        {"style", isUnderlined? "border-bottom: 1px solid; transition: border-bottom 0.5s; opacity: 1; transition: opacity 0.5s" : "transition: border-bottom 0.5s; opacity: 1; transition: opacity 0.5s;"},
+    };
+
+    private void GoTo()
+    {
+        if(!String.IsNullOrEmpty(Path))
+        {
+            nav.NavigateTo(Path);
+        }
+    }
+
+
+}

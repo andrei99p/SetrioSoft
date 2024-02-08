@@ -1,0 +1,23 @@
+﻿@page "/"
+
+@inject IFacturaRepository facturaRepository
+
+
+<MudDataGrid Items="@facturi">
+    <Columns>
+        <PropertyColumn Property="x => x.IdFactura" Title="Id Factura" />
+        <PropertyColumn Property="x => x.IdLocatie" Title="Id Locatie"/>
+        <PropertyColumn Property="x => x.NumarFactura" Title="Nr. Factura" />
+        <PropertyColumn Property="x => x.NumeClient" Title="Client"/>
+        <PropertyColumn Property="x => x.DataFactura" Title="Data Factura" />
+    </Columns>
+</MudDataGrid>
+
+@code{
+    private IEnumerable<Factura> facturi = new List<Factura>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        facturi = await facturaRepository.All();
+    }
+}
